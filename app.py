@@ -135,3 +135,13 @@ def homepage():
     # if request.method == "POST":
     return render_template("homepage.html")
 
+@app.route("/log", methods = ["GET", "POST"])
+@login_required
+def log():
+    if request.method == "POST":
+        exercise_list = db.execute("SELECT * FROM exercises")
+
+        
+    
+    else:
+        return render_template("homepage.html")
