@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, width=device-width">
+    <title>Gym App - {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <nav>
+        <a href="/homepage">Gym App</a>
+        {% if session["user_id"] %}
+            <form action="/logout" method="post">
+                <button type="submit">Log out</button>
+            </form>
+        {% else %}
+            <a href="/register">Register</a>
+            <a href="/login">Log in</a>
+        {% endif %}
+    </nav>
+    <main>
+        {% block main %}{% endblock %}
+    </main>
+</body>
+</html>

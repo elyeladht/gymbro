@@ -14,7 +14,7 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 # Configure CS50 Library to use SQLite database
-db = SQL("sqlite:///finance.db")
+db = SQL("sqlite:///gym.db")
 
 
 @app.after_request
@@ -24,6 +24,10 @@ def after_request(response):
     response.headers["Expires"] = 0
     response.headers["Pragma"] = "no-cache"
     return response
+
+@app.route("/")
+def index():
+    return redirect("/homepage")
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -87,11 +91,10 @@ def login():
 
     if request.method == "POST":
 
-        # Check entries (username, email, password)
+        # Check entries (email, password)
         # Create session from user_id
         # Redirect to homepage
 
-        # username = request.form.get("username", "").strip()
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password")
 
@@ -118,3 +121,17 @@ def login():
     else:
         # GET method: load page
         return render_template("login.html")
+
+@app.route("/logout", methods = ["POST"])
+@login_required
+def logout():
+    session.clear()
+    return redirect("/login")
+
+
+@app.route("/homepage", methods = ["GET"])
+@login_required
+def homepage():
+    # if request.method == "POST":
+    return render_template("homepage.html")
+
