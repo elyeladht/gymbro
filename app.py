@@ -5,6 +5,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from helpers import apology, login_required
 
+import math
+
 # Configure application
 app = Flask(__name__)
 
@@ -134,14 +136,53 @@ def logout():
 def homepage():
     # if request.method == "POST":
     return render_template("homepage.html")
-
-@app.route("/log", methods = ["GET", "POST"])
+@app.route("/log", methods=["GET", "POST"])
 @login_required
 def log():
     if request.method == "POST":
-        exercise_list = db.execute("SELECT * FROM exercises")
+        exercise_id = request.form.get("exercise_id")
 
-        
-    
-    else:
-        return render_template("homepage.html")
+        try:
+            weight = float(request.form.get("weight"))
+            reps = int(request.form.get("reps"))
+        except (ValueError, TypeError):
+            return apology("Weight and repetitions must be numbers")
+
+        if not math.isfinite(weight) or weight < 0:
+            return apology("Weight must be 0 or more")
+
+        if reps < 1:
+            return apology("Repetitions must be at least 1")
+
+        if not db.execute("SELECT 1 FROM exercises WHERE exercise_id = ?", exercise_id):
+            return apology("Exercise does not exist")
+
+        db.execute(
+            "INSERT INTO workout_log (user_id, exercise_id, weight, reps) VALUES (?, ?, ?, ?)",
+            session["user_id"], exercise_id, weight, reps
+        )
+
+        flash("Set saved!")
+        return redirect("/log")
+
+    exercises = db.execute(
+        "SELECT exercise_id, exercise_name FROM exercises ORDER BY exercise_name"
+    )
+    return render_template("log.html", exercises=exercises)
+
+@app.route("/history")
+@login_required
+def history():
+    # Join tables exercises and workout_log to extract exercise_name, weight, reps and recorded_at columns
+    sets = db.execute(
+        """
+        SELECT e.exercise_name, w.weight, w.reps,
+            datetime(w.recorded_at, 'localtime') AS recorded_at
+        FROM workout_log w
+        JOIN exercises e ON e.exercise_id = w.exercise_id
+        WHERE w.user_id = ?
+        ORDER BY w.recorded_at DESC, w.log_id DESC
+        """,
+        session["user_id"]
+    )
+    return render_template("history.html", sets=sets) 
